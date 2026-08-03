@@ -2,7 +2,7 @@
         description = "Master flake, providing all outputs";
 
         inputs = {
-                nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+                nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
                 home-manager.url = "github:nix-community/home-manager";
                 home-manager.inputs.nixpkgs.follows = "nixpkgs";
         };
@@ -47,8 +47,8 @@
                         };
                 });
 
-                homeModules = {
-                        "swayimg_${swayimgVersion}" = import ./swayimg/hm-module.nix {};
-                };
+                homeModules = forAllSystems ({pkgs}:{
+                        "swayimg_${swayimgVersion}" = import ./swayimg/hm-module.nix {inherit pkgs;};
+                });
         };
 }
