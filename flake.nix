@@ -25,7 +25,7 @@
         {
                 packages = forAllSystems ({pkgs}: {
                         swayimg-lock = pkgs.swayimg.overrideAttrs {
-                                src = pkgs.fetchFromGithub {
+                                src = pkgs.fetchFromGitHub {
                                         owner = "artemsen";
                                         repo = "swayimg";
                                         rev = swayimgVersion;
