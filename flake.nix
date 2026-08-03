@@ -48,7 +48,7 @@
                 });
 
                 homeModules = {
-                        ${swayimgVersion} = import ./swayimg/hm-module.nix {};
+                        "swayimg_${swayimgVersion}" = import ./swayimg/hm-module.nix {};
                 };
         };
 }
