@@ -24,15 +24,7 @@
         in
         {
                 packages = forAllSystems ({pkgs}: {
-                        swayimg-lock = pkgs.swayimg.overrideAttrs {
-                                src = pkgs.fetchFromGitHub {
-                                        owner = "artemsen";
-                                        repo = "swayimg";
-                                        rev = swayimgVersion;
-                                        hash = "sha256-PaxVcuEafLdUETSG78lGSaDukPv/2m1TUbfvpBZTT40=";
-                                };
-                                version = swayimgVersion;
-                        };
+                        swayimg-lock = pkgs.callPackage ./swayimg/package.nix {};
 
                         lintree = pkgs.buildGoModule rec {
                                 pname = "lintree";
