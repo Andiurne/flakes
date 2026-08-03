@@ -48,7 +48,7 @@
                 });
 
                 homeModules = forAllSystems ({pkgs}:{
-                        "swayimg_${swayimgVersion}" = import ./swayimg/hm-module.nix {inherit pkgs;};
+                        "swayimg_${swayimgVersion}" = import ./swayimg/hm-module.nix {inherit pkgs; lib = pkgs.lib;};
                 });
         };
 }
