@@ -1,4 +1,13 @@
 {nixpkgs}: let
+                inherit (nixpkgs.lib)
+                        isBool
+                        boolToString
+                        types
+                        mkOption
+                        mkEnableOption
+                        mapAttrsToList
+                        ;
+
                 mkDisableOption = name:(nixpkgs.lib.mkOption{
                         type = nixpkgs.lib.types.bool;
                         default = true;
@@ -10,15 +19,6 @@
                 addQuotes = text: ''"${text}"'';
 
         in rec {
-                inherit mkDisableOption;
-                inherit (nixpkgs.lib)
-                        isBool
-                        boolToString
-                        types
-                        mkOption
-                        mkEnableOption
-                        mapAttrsToList
-                        ;
                 /*
                 This type is meant to be used as follows:
                 As an example, assume some program with lua configuration
