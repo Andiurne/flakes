@@ -12,7 +12,7 @@
         };
 
 
-        outputs = {nixpkgs, luaUtils, ...}:
+        outputs = {self, nixpkgs, luaUtils, ...}:
         let
                 allSystems = [
                         "x86_64-linux" # 64-bit Intel/AMD Linux
@@ -39,8 +39,8 @@
                 });
 
                 homeModules = {
-                        default = import ./hm-module.nix {inherit luaUtils;};
-                        ${swayimgVersion} = import ./hm-module.nix {inherit luaUtils;};
+                        default = self.homeModules."v5.5";
+                        ${swayimgVersion} = import ./hm-module.nix luaUtils;
                 };
         };
 }
