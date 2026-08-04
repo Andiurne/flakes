@@ -1,8 +1,7 @@
-{
+{luaUtils, ...}:{
   config,
   lib,
   pkgs,
-  luaUtils,
   ...
 }:
 /*
