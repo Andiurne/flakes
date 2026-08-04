@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  luaUtils ? builtins.getFlake "github:andiurne/flakes?dir=luaUtils",
   ...
 }:
 /*
@@ -15,6 +14,8 @@ strMatching uses this as a bool test
 
 */
 let
+  luaUtils = builtins.getFlake "github:Andiurne/flakes?dir=luaUtils";
+
   inherit (lib)
     types
     mkOption
