@@ -31,6 +31,7 @@
                 maybeLuaText is shorthand for `either str luaText`
                 */
                 luaText = with types; addCheck (attrsOf anything) (attrs: attrs ? lua);
+                mkLuaText = nixString: {lua = nixString;};
 
                 maybeLuaText = with types; either str luaText;
                 hasLuaText = value: builtins.isAttrs value && value ? lua;
