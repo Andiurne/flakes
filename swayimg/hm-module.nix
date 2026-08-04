@@ -20,7 +20,7 @@ let
     mkEnableOption
     ;
 
-  luaUtils = builtins.getFlake "github:Andiurne/flakes/fe7e968ef438b8c8b5fe6cd19411904e377fe943?dir=luaUtils";
+  luaUtils = builtins.getFlake "github:Andiurne/luaUtils/55d13bfd9f464f58c55dfcc8bd562d0bc3d844b4";
 
   inherit (luaUtils)
     luaText
