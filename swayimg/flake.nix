@@ -36,7 +36,7 @@
                 });
 
                 homeModules = {
-                        ${swayimgVersion} = import ./hm-module.nix {inherit luaUtils;};
+                        ${swayimgVersion} = import ./hm-module.nix luaUtils;
                 };
         };
 }

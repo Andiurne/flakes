@@ -1,4 +1,4 @@
-{luaUtils, ...}:{
+luaUtils:{
   config,
   lib,
   pkgs,
