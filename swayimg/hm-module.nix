@@ -1,4 +1,4 @@
-{
+{luaUtils}:{
   config,
   lib,
   pkgs,
@@ -14,8 +14,6 @@ strMatching uses this as a bool test
 
 */
 let
-  luaUtils = builtins.getFlake "github:Andiurne/flakes?dir=luaUtils";
-
   inherit (lib)
     types
     mkOption

@@ -5,10 +5,11 @@
                 nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
                 home-manager.url = "github:nix-community/home-manager";
                 home-manager.inputs.nixpkgs.follows = "nixpkgs";
+                luaUtils.url = "github:Andiurne/flakes?dir=luaUtils";
         };
 
 
-        outputs = {nixpkgs, ...}:
+        outputs = {nixpkgs, luaUtils, ...}:
         let
                 allSystems = [
                         "x86_64-linux" # 64-bit Intel/AMD Linux
@@ -35,7 +36,7 @@
                 });
 
                 homeModules = {
-                        ${swayimgVersion} = import ./hm-module.nix {};
+                        ${swayimgVersion} = import ./hm-module.nix {inherit luaUtils;};
                 };
         };
 }
