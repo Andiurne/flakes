@@ -48,14 +48,20 @@
                 - A boolean
                 - A number
                 - An attribute set
-                - Null
-                - a maybeLuaText (all other lua types)
+                - A listOf luaValue
+                - a maybeLuaText (all other lua types, including nil)
 
                 and produces the literal Lua representation of them
                 as text.
                 */
                 interpretLuaValue = input:
-                if builtins.isAttrs input
+                if !(luaValue.check input)
+                        then throw "attempting to interpret unsupported type"
+                else if isNull input
+                        then "nil"
+                else if builtins.isList input
+                        then listToAnonTable (map interpretLuaValue input)
+                else if builtins.isAttrs input
                         # luaText input
                         then if hasLuaText input
                                 then getLuaText input
@@ -68,6 +74,15 @@
                 else if isBool input
                         then boolToString input
                 else toString input;
+
+                luaValue = with types; oneOf [
+                        str
+                        bool
+                        number
+                        (attrsOf luaValue)
+                        (listOf luaValue)
+                        maybeLuaText
+                ];
 
 
                 luaFunctionDeclaration = with types; submodule({name, ...}:{options =
@@ -96,13 +111,13 @@
                                 '';
                         };
                 };});
-                mkLuaFunctionText = name: parameters: body: ''
-                function ${name} (${builtins.concatStrinsSep ", " parameters})
+                mkLuaFunctionText = {name ? "", parameters ? [], body}: ''
+                function ${name} (${builtins.concatStringsSep ", " parameters})
                 ${addTab body}
                 end
                 '';
 
-                mkLuaVariableText = name: value: ''${name} = ${value}'';
+                mkLuaVariableText = {name, value}: ''${name} = ${value}'';
 
                 /* Assumes values in the attrs are parseable by interpretLuaValue,
                 and keys are strings to be surrounded
@@ -144,9 +159,13 @@
                 `swayimg.viewer.set_window_background()` has path
                 `["swayimg" "viewer" "set_window_background"]`
                 */
-                mkFunctionCall = path: argList:
+                mkLuaFunctionCall = {path, argList ? []}:
                 let
-                pathText = if hasLuaText path then getLuaText path else builtins.concatStringsSep "." path;
+                pathText = if hasLuaText path
+                                then getLuaText path
+                        else if builtins.isList path
+                                then builtins.concatStringsSep "." path
+                        else path;
                 in
-                "${pathText}(${builtins.concatStringsSep "," (map interpretLuaValue argList)})";
+                "${pathText}(${builtins.concatStringsSep ", " argList})";
 }

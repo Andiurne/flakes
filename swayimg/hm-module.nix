@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  options,
+  luaUtils,
   ...
 }:
 /*
@@ -19,7 +19,17 @@ let
     types
     mkOption
     mkEnableOption
-  ;
+    ;
+
+  inherit (luaUtils)
+    luaText
+    interpretLuaValue
+    luaFunctionDeclaration
+    mkLuaFunctionText
+    mkLuaFunctionCall
+    mkLuaVariableText
+    ;
+
   cfg = config.programs.swayimg;
 
   # Types adapted from the Lua source file upstream,
@@ -119,17 +129,10 @@ let
     ];
   };
 
-  mkLuaText = text: {inherit text; isLiteral = true;};
-
-  luaText = types.submodule ({name, ...}:{
-    options = {
-      lua = mkOption {
-        type = types.str;
-        default = name;
-      };
-      isLiteral = mkDisableOption "whether to treat <lua> as literal Lua (unquoted)";
-    };
-  });
+  checkQuotes = text:
+      if builtins.isList (builtins.match ''"[^"]*"'' text)
+        then text
+        else ''"${text}"'';
 
   mkDisableOption = name:(mkOption {
     type = types.bool;
@@ -146,9 +149,9 @@ let
     '';
   };
 
-  set_text_option = mode: lib.genAttrs swayimgTypes.block_positions (position: mkOption{
+  set_text_option = {mode, default}: lib.genAttrs swayimgTypes.block_positions (position: mkOption{
         type = with types; listOf str;
-        default = [];
+        default = if default ? ${position} then default.${position} else [];
         description = ''
         Text formatting for the `${position}` text in ${mode} mode.
         Written as a list, with string entries according to swayimg
@@ -166,7 +169,7 @@ let
         # But it doesn't need to and that's a lot for no benefit really.
         default = {};
         description = ''
-        An attribute set of keybinding submodules for ${mode} mode.
+        An attribute set of keybindings for ${mode} mode.
         Each binding is of the format:
         # on_key
         <keyDescriptor> = <functionBody>
@@ -223,12 +226,10 @@ let
         type = types.str;
         default = name;
         description = ''
-        A keybind descriptor in the format (<mod>+)*<sym> to trigger the keybind.
-        Defaults to the name of the keybind, for efficient definition in the form
-        of
-        `on_key."Ctrl+a".functionBody = '''';`
+        A raw lua value evaluating to a keybind descriptor in the format
+        (<mod>+)*<sym> to trigger the keybind.
+        Defaults to the name of the keybind. Will not be quoted.
         '';
-        example = "Ctrl+a";
       };
 
       functionBody = mkOption {
@@ -241,37 +242,6 @@ let
     };
   }));
 
-  luaFunctionDeclaration = types.submodule (
-    {name, ...}:{options = {
-
-        name = mkOption {
-          type = types.singleLineStr;
-          default = name;
-          description = ''
-            Name of the local lua function to be declared.
-          '';
-        };
-
-        parameters = mkOption {
-          type = types.listOf lib.types.singleLineStr;
-          default = [];
-          description = ''
-            A list of names of function parameters to declare.
-          '';
-        };
-
-        body = mkOption {
-          type = types.lines;
-          default = ''
-
-          '';
-          description = ''
-            The function body as a multiline string.
-          '';
-        };
-      };
-    }
-  );
 in
 {
   meta.maintainers = with lib.maintainers; [ dod-101 andiurne ];
@@ -424,7 +394,7 @@ in
 
       mark_color = mkOption {
         type = swayimgTypes.color_t;
-        default = "0xff808080";
+        default = { lua = "0xff808080"; };
         description = ''
         Mark icon color.
         '';
@@ -440,7 +410,23 @@ in
 
       set_window_background = setWindowBkgOpt;
 
-      set_text = set_text_option "viewer";
+      set_text = set_text_option {mode = "viewer"; default = {
+        topleft = [
+          "File:\t{name}"
+          "Format:\t{format}"
+          "File size:\t{sizehr}"
+          "File time:\t{time}"
+          "EXIF date:\t{meta.Exif.Photo.DateTimeOriginal}"
+          "EXIF camera:\t{meta.Exif.Image.Model}"
+        ];
+        topright = [
+        "Image:\t{list.index} of {list.total}"
+        "Frame:\t{frame.index} of {frame.total}"
+        "Size:\t{frame.width}x{frame.height}"
+        ];
+        bottomleft = ["Scale:\t{scale}"];
+        };
+      };
 
       set_image_chessboard = {
         size = mkOption {
@@ -449,11 +435,11 @@ in
         };
         color1 = mkOption {
           type = swayimgTypes.color_t;
-          default = "0xff333333";
+          default = { lua = "0xff333333"; };
         };
         color2 = mkOption {
           type = swayimgTypes.color_t;
-          default = "0xff4c4c4c";
+          default = { lua = "0xff4c4c4c"; };
         };
       };
 
@@ -490,7 +476,9 @@ in
 
 
       set_window_background = setWindowBkgOpt;
-      set_text = set_text_option "slideshow";
+      set_text = set_text_option {mode = "slideshow"; default.topLeft = [
+        "{name}"
+      ];};
       on_mouse = on_mouse_option "slideshow";
       on_key = on_key_option "slideshow";
     };
@@ -530,7 +518,7 @@ in
 
       border_color = mkOption {
         type = swayimgTypes.color_t;
-        default = "0xffaaaaaa";
+        default = { lua = "0xffaaaaaa"; };
         description = ''
         Border color for selected thumbnail, in ARGB hex.
         '';
@@ -546,7 +534,7 @@ in
 
       selected_color = mkOption {
         type = swayimgTypes.color_t;
-        default = "0xff404040";
+        default = { lua = "0xff404040"; };
         description = ''
         Background color of the selected thumbnail, in ARGB hex.
         '';
@@ -554,7 +542,7 @@ in
 
       unselected_color = mkOption {
         type = swayimgTypes.color_t;
-        default = "0xff202020";
+        default = { lua = "0xff202020"; };
         description = ''
         Background color of unselected thumbnails, in ARGB hex.
         '';
@@ -562,7 +550,7 @@ in
 
       window_color = mkOption {
         type = swayimgTypes.color_t;
-        default = "0xff000000";
+        default = { lua = "0xff000000"; };
         description = ''
         Background color of the window in gallery mode.
         '';
@@ -592,7 +580,11 @@ in
       embedded_thumb = mkDisableOption "using embedded thumbnails";
       pstore = mkEnableOption "persistent storage for thumbnails";
 
-      set_text = set_text_option "gallery";
+      set_text = set_text_option {mode = "gallery"; default = {
+        topleft = ["File:\t{name}"];
+        topright = ["{list.index} of {list.total}"];
+        };
+      };
       on_mouse = on_mouse_option "gallery";
       on_key = on_key_option "gallery";
     };
@@ -647,25 +639,25 @@ in
 
       color = mkOption {
         type = swayimgTypes.color_t;
-        default = "0xff000000";
+        default = { lua = "0xff000000"; };
         description = ''
         Text color in ARGB hex format;
         '';
-        example = mkLuaText "0xff00aa99";
+        example = { lua = { lua = "0xff00aa99"; }; };
       };
 
       background = mkOption {
         type = swayimgTypes.color_t;
-        default = "0x00000000";
+        default = { lua = "0x00000000"; };
         description = ''
         Background color for text in ARGB hex format.
         '';
-        example = mkLuaText "0xff00aa99";
+        example = { lua = { lua = "0xff00aa99"; }; };
       };
 
       shadow = mkOption {
         type = swayimgTypes.color_t;
-        default = "0x0d000000";
+        default = { lua = "0x0d000000"; };
         description = ''
         Color of text shadow in ARGB hex format.
         '';
@@ -719,112 +711,69 @@ in
 
   config =
   let
-    defaultValue = attributePath:
-      lib.getAttrFromPath
-      (attributePath ++ ["default"])
-      options.programs.swayimg
-    ;
-
-    addTab = lines: "\t" + (builtins.replaceStrings [ "\n" ] [ "\n\t" ] lines);
-    checkQuotes = text:
-      if builtins.isList (builtins.match ''"[^"]*"'' text)
-        then text
-        else ''"${text}"'';
-
-    mkLuaFunction = name: parameters: body:
-    ''
-    function ${name} (${builtins.concatStringsSep ", " parameters})
-    ${addTab body}
-    end
-    '';
-
-    mkLuaVariable = name: value: ''${name} = ${value}'';
-
-    toLuaVal = input:
-    if builtins.isAttrs input
-      then (if input.isLiteral then input.lua else checkQuotes input.lua)
-
-    else if builtins.isString input
-      then if builtins.isList (builtins.match "0x[[:xdigit:]]{8}" input)
-        then input
-        else checkQuotes input
-
-    else if lib.isBool input
-      then lib.boolToString input
-    # Must be a number
-    else toString input
-    ;
+        attrsToText = {set, mapFunc}: lib.concatStrings (lib.mapAttrsToList mapFunc set);
 
     sectionToLua = section:
-    [''
+    [
+    ''
 
-      --------------
-      -- ${section}
-      --------------
+    --------------
+    -- ${section}
+    --------------
 
-    '']
-    ++
-    lib.lists.flatten
+    ${lib.concatStrings (lib.lists.flatten
     (lib.mapAttrsToList
       (attr: value:
       # Checks for function call set values
-        if attr == "set_window_background"  && value != defaultValue [ section attr ]
-          then mkSwayimgCall section attr [(toLuaVal value)]
+        if attr == "set_window_background"
+          then "${mkSwayimgCall section attr [(interpretLuaValue value)]}\n"
 
         else if attr == "set_image_chessboard"
-          then mkSwayimgCall section attr (with value; (map toLuaVal [size color1 color1]))
+          then "${mkSwayimgCall section attr (map interpretLuaValue (with value; [size color1 color1]))}\n"
 
         else if attr == "set_text"
           then
             lib.attrsets.mapAttrsToList
             (position: textFormat:
-              if defaultValue [ section attr position ] == textFormat
-                then ""
-                else mkSwayimgCall section attr
-                  [position ("{${lib.concatStringsSep ", " textFormat}}") ]
+              if textFormat != [] then
+                "${mkSwayimgCall section attr [(checkQuotes position) (interpretLuaValue textFormat) ]}\n"
+              else ""
             )
             value
 
         else if (attr == "on_key") || (attr == "on_mouse")
           then
             lib.attrsets.mapAttrsToList
-            (bindName: bindVal: let
+            (bindName: bindVal:
+              let
                 # Assumes that if keybind shorthand is used, the descriptor
                 # needs to be quoted
                 keybind = if builtins.isAttrs bindVal then bindVal else mkKeyBinding (checkQuotes bindName) bindVal;
-              in (mkSwayimgCall section attr (
-              [
-              (toLuaVal keybind.keyDescriptor)
-              (mkLuaFunction "" [] keybind.functionBody)
-              ])) + "\n")
+              in
+              (mkSwayimgCall section attr [ keybind.keyDescriptor (mkLuaFunctionText {body = keybind.functionBody;}) ]) + "\n"
+            )
             value
-        else mkLuaSectionAttribute section attr
+        else fillSectionField section attr
       )
       cfg.${section}
-    );
+    ))}''];
 
     mkSwayimgCall =
-    mode: functionName: argumentList:
+    mode: functionName: argList:
       let
-        path = if isNull mode then "${functionName}" else "${mode}.${functionName}";
-      in
-      ''
-      swayimg.${path}(${builtins.concatStringsSep ", " argumentList})
-      ''
-    ;
+        path = if isNull mode then "swayimg.${functionName}" else "swayimg.${mode}.${functionName}";
+      in mkLuaFunctionCall {inherit path argList;};
 
     # These could be merged by parsing attribute paths
     # But that would also forbid names with periods
-    mkLuaGlobalAttribute = attribute:
-      if (defaultValue [ attribute ] == cfg.${attribute})
-        then ""
-        else "swayimg.${attribute} = ${toLuaVal cfg.${attribute}}\n"
-    ;
-    mkLuaSectionAttribute = section: attribute:
-      if (defaultValue [ section attribute ] == cfg.${section}.${attribute})
-        then ""
-        else "swayimg.${section}.${attribute} = ${toLuaVal cfg.${section}.${attribute}}\n"
-    ;
+    fillGlobalField = field:
+      # Uses the mirrored structure of the config
+      "${mkLuaVariableText {name = "swayimg.${field}"; value = (interpretLuaValue cfg.${field}); }}\n";
+
+    fillSectionField = section: attribute:
+        "${mkLuaVariableText {name = "swayimg.${section}.${attribute}"; value = (interpretLuaValue cfg.${section}.${attribute}); }}\n";
+
+    initLuaText = if builtins.isPath cfg.initLua then builtins.readFile cfg.initLua else cfg.initLua;
     extraLuaText = if builtins.isPath cfg.extraLua then builtins.readFile cfg.extraLua else cfg.extraLua;
   in
   lib.mkIf cfg.enable {
@@ -837,47 +786,57 @@ in
     xdg.configFile.${cfg.configPath} = {
       text = lib.concatStrings (
       # Begin massive string list concatenation
+      [(if isNull initLuaText then "" else ''
+      -----------
+      -- Init Lua
+      -----------
+
+      ${initLuaText}
+      '')]
+      ++
       (map (requirePath: ''require "${requirePath}"'') cfg.requirePaths)
       ++
-      (
-      [''
+      [(if cfg.variables == {} then "" else ''
 
-        ----------------
-        -- Lua Variables
-        ----------------
+      ----------------
+      -- Lua Variables
+      ----------------
 
-      ''] ++ lib.mapAttrsToList
-        (name: setting: (if builtins.isAttrs setting then (mkLuaVariable name setting.value) else mkLuaVariable name setting) + "\n")
-        cfg.variables
-      )
+      ${attrsToText {
+         mapFunc = (name: setting: (mkLuaVariableText {inherit name; value = interpretLuaValue setting;}) + "\n");
+         set = cfg.variables;
+        }
+      }
+      '')]
       ++
-      ([''
+      [(if cfg.functions == {} then "" else ''
 
-        ----------------
-        -- Lua Functions
-        ----------------
+      ----------------
+      -- Lua Functions
+      ----------------
 
-        ''] ++ lib.mapAttrsToList
-        (name: set: (mkLuaFunction set.name set.parameters set.body) + "\n")
-        cfg.functions
-      )
+      ${attrsToText {
+        mapFunc = (name: set: (mkLuaFunctionText set) + "\n");
+        set = cfg.functions;}
+      }
+      '')]
       ++
-      ([
+      [
         ''
 
         ------------------
         -- Swayimg Globals
         ------------------
 
-        ''
-      ] ++ (map mkLuaGlobalAttribute [
+        ${lib.concatStrings (map fillGlobalField [
         "mode"
         "antialiasing"
         "decoration"
         "overlay"
         "exif_orientation"
         "dnd_button"
-      ]))
+      ])}''
+      ]
       ++
       (lib.lists.flatten (map sectionToLua
           [
@@ -890,14 +849,14 @@ in
       ))
       ++
       [
-        ''
+        (if isNull extraLuaText then "" else ''
 
         ------------
         -- Extra Lua
         ------------
 
-        ''
-        (if isNull extraLuaText then "" else extraLuaText)
+        ${if isNull extraLuaText then "" else extraLuaText}
+        '')
       ]);
     };
   };

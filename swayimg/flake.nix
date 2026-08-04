@@ -8,7 +8,7 @@
         };
 
 
-        outputs = {nixpkgs, ...}:
+        outputs = {nixpkgs, home-manager, ...} @ inputs:
         let
                 allSystems = [
                         "x86_64-linux" # 64-bit Intel/AMD Linux
