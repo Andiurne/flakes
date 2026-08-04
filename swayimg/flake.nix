@@ -5,7 +5,10 @@
                 nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
                 home-manager.url = "github:nix-community/home-manager";
                 home-manager.inputs.nixpkgs.follows = "nixpkgs";
-                luaUtils.url = "github:Andiurne/flakes?dir=luaUtils";
+                luaUtils = {
+                        url = "github:Andiurne/flakes?dir=luaUtils";
+                        inputs.nixpkgs.follows = "nixpkgs";
+                };
         };
 
 

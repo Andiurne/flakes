@@ -1,5 +1,5 @@
-{pkgs, ...}: let
-                inherit (pkgs.lib)
+{lib, ...}: let
+                inherit (lib)
                         isBool
                         boolToString
                         types
