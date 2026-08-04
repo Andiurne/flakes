@@ -40,7 +40,7 @@
 
                 homeModules = {
                         default = self.homeModules."v5.5";
-                        ${swayimgVersion} = import ./hm-module.nix luaUtils;
+                        ${swayimgVersion} = ./hm-module.nix;
                 };
         };
 }

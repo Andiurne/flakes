@@ -1,4 +1,4 @@
-luaUtils: {
+{
   config,
   lib,
   pkgs,
@@ -19,6 +19,8 @@ let
     mkOption
     mkEnableOption
     ;
+
+  luaUtils = builtins.getFlake "github:Andiurne/flakes/fe7e968ef438b8c8b5fe6cd19411904e377fe943?dir=luaUtils";
 
   inherit (luaUtils)
     luaText
