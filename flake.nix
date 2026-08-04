@@ -40,7 +40,7 @@
                 });
 
                 homeModules = {
-                        "swayimg_${swayimgVersion}" = import ./swayimg/hm-module.nix {luaUtils = self.luaUtils;};
+                        "swayimg_${swayimgVersion}" = ./swayimg/hm-module.nix;
                 };
 
                 luaUtils = import ./luaUtils/lib.nix {lib = nixpkgs.lib;};
