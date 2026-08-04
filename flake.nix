@@ -43,6 +43,6 @@
                         "swayimg_${swayimgVersion}" = ./swayimg/hm-module.nix;
                 };
 
-                luaUtils = import ./luaUtils/lib.nix {inherit nixpkgs;};
+                luaUtils = import ./luaUtils/lib.nix;
         };
 }
