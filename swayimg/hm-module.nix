@@ -1,4 +1,4 @@
-luaUtils:{
+{
   config,
   lib,
   pkgs,
@@ -19,6 +19,8 @@ let
     mkOption
     mkEnableOption
     ;
+
+  luaUtils = import ../luaUtils/lib.nix {inherit pkgs;};
 
   inherit (luaUtils)
     luaText

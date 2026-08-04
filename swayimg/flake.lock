@@ -20,7 +20,43 @@
         "type": "github"
       }
     },
+    "luaUtils": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "dir": "luaUtils",
+        "lastModified": 1785829466,
+        "narHash": "sha256-0F8ZzC2/DWGmI3+7HHwuKJeejZkYA1pb78hU93qs7lM=",
+        "owner": "Andiurne",
+        "repo": "flakes",
+        "rev": "855643081d5e2dccc488d16e0ed47d59624a2be2",
+        "type": "github"
+      },
+      "original": {
+        "dir": "luaUtils",
+        "owner": "Andiurne",
+        "repo": "flakes",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
+      "locked": {
+        "lastModified": 1785734586,
+        "narHash": "sha256-ODZkEK9Gy50yg6h98u7KkitZ3oc/uuTFK00bh1CRdNA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "531670d871c0e29724a02f3cbcac170adc65b58c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
       "locked": {
         "lastModified": 1785318670,
         "narHash": "sha256-dN6Ou5x/+23FZLEpYP3IffO+NyJFzUlGumt1uu3MMaY=",
@@ -39,7 +75,8 @@
     "root": {
       "inputs": {
         "home-manager": "home-manager",
-        "nixpkgs": "nixpkgs"
+        "luaUtils": "luaUtils",
+        "nixpkgs": "nixpkgs_2"
       }
     }
   },

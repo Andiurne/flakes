@@ -1,5 +1,5 @@
-{nixpkgs}: let
-                inherit (nixpkgs.lib)
+{pkgs, ...}: let
+                inherit (pkgs.lib)
                         isBool
                         boolToString
                         types
@@ -8,8 +8,8 @@
                         mapAttrsToList
                         ;
 
-                mkDisableOption = name:(nixpkgs.lib.mkOption{
-                        type = nixpkgs.lib.types.bool;
+                mkDisableOption = name: (mkOption{
+                        type = types.bool;
                         default = true;
                         description = "Whether to disable ${name}";
                 });
