@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  luaUtils,
+  luaUtils ? (builtins.getFlake "github:andiurne/flakes?dir=luaUtils").luaUtils,
   ...
 }:
 /*
